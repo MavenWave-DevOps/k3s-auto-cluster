@@ -9,7 +9,7 @@ import (
 var myifaces []string
 
 func getFourthOctet() (string, error) {
-
+	return "test", nil
 }
 
 func GetMyIp() ([]string, error) {
@@ -17,15 +17,15 @@ func GetMyIp() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, i := range ifaces{
-		addrs, _ := i.Addrs()
-		for _, addr := range addrs{
-			myifaces = append(myifaces, addr.String())
+	for _, iface := range ifaces{
+		if iface.Name == "eth0"{
+			addrs, _ := iface.Addrs()
+			for _, addr := range addrs {
+				myifaces = append(myifaces, addr.String())
+			}
 		}
 	}
-
 	return myifaces, nil
-
 }
 
 func Send(pc net.PacketConn) {
