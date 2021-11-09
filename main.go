@@ -3,6 +3,7 @@ package main
 import (
 	"autok3s/udp"
 	"fmt"
+	"log"
 	"net"
 	"sync"
 )
@@ -19,7 +20,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Found them.\n Setting up connection.")
+	fmt.Println("Found them.\n Determining 4th octet.")
+	octet, err := udp.GetFourthOctet(myIps)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Done - setting up connection", octet)
 	pc, err := net.ListenPacket("udp4", ":8830")
 	if err != nil {
 		panic(err)
@@ -28,13 +34,14 @@ func main() {
 	wg.Add(1)
 	fmt.Println("Launching Goroutine for udp server...")
 
-	go func(){
+	go func() string {
 		defer wg.Done()
-		udp.Receive(pc, myIps)
+		r := udp.Receive(pc, myIps)
+		return r
 	}()
 
 	fmt.Println("Sending a packet")
-	udp.Send(pc)
+	udp.Send(pc, octet)
 	fmt.Println("Waiting for receiving to finish...")
 	wg.Wait()
 	defer pc.Close()

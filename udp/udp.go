@@ -1,15 +1,33 @@
 package udp
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strings"
 	"time"
 )
+
 var myifaces []string
 
-func getFourthOctet() (string, error) {
-	return "test", nil
+func GetFourthOctet(ips []string) (string, error) {
+	fmt.Println(ips)
+	fmt.Println(len(ips))
+	if len(ips) == 1 {
+		return strings.Split(strings.Split(ips[0], "/")[0], ".")[3], nil
+	} else if len(ips) == 2 {
+		for _, ip := range ips {
+			if strings.Contains(ip, ":") {
+				continue
+			} else {
+				return strings.Split(strings.Split(ips[0], "/")[0], ".")[3], nil
+			}
+		}
+	} else {
+		return "", errors.New("Length is wrong")
+	}
+
+	return "", errors.New("Something weird happened...")
 }
 
 func GetMyIp() ([]string, error) {
@@ -17,8 +35,8 @@ func GetMyIp() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, iface := range ifaces{
-		if iface.Name == "eth0"{
+	for _, iface := range ifaces {
+		if iface.Name == "eth0" {
 			addrs, _ := iface.Addrs()
 			for _, addr := range addrs {
 				myifaces = append(myifaces, addr.String())
@@ -28,7 +46,7 @@ func GetMyIp() ([]string, error) {
 	return myifaces, nil
 }
 
-func Send(pc net.PacketConn) {
+func Send(pc net.PacketConn, payload string) {
 	addr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:8830")
 	if err != nil {
 		panic(err)
@@ -37,15 +55,15 @@ func Send(pc net.PacketConn) {
 	fmt.Println(addr)
 
 	for i := 0; i < 10; i++ {
-		_, err = pc.WriteTo([]byte("this is a test"), addr)
+		_, err = pc.WriteTo([]byte(payload), addr)
 		if err != nil {
 			panic(err)
 		}
 		fmt.Printf("Done sending packet %d - Packet sent successfully\n", i)
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
-func Receive(pc net.PacketConn, myIps []string) {
+func Receive(pc net.PacketConn, myIps []string) string {
 	for {
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
@@ -64,9 +82,8 @@ func Receive(pc net.PacketConn, myIps []string) {
 		}
 		if loop_on == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
-			break
+			return string(buf[:n])
 		}
-
 		continue
 	}
 }
