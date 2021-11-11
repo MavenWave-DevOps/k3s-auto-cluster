@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"strconv"
 	"sync"
 )
 
@@ -45,10 +47,27 @@ func main() {
 	udp.Send(pc, octet)
 	fmt.Println("Waiting for receiving to finish...")
 	select {
-		case otherIP := <-c:
-			fmt.Println("Received", otherIP)
+	case otherIP := <-c:
+		fmt.Println("Received", otherIP)
+		myOctet, err := strconv.Atoi(octet)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		otherOctet, err := strconv.Atoi(otherIP)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if myOctet > otherOctet {
+			os.Setenv("K3S_MASTER", "true")
+		} else {
+			os.Setenv("K3S_MASTER", "false")
+		}
 	}
 	wg.Wait()
+
+	fmt.Println("K3S_MASTER: ", os.Getenv("K3S_MASTER"))
 
 	defer pc.Close()
 }
