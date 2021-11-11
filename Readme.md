@@ -1,4 +1,4 @@
 # autok3s
 
 ## Description
-This program is meant to negotiate a cluster between 2 K3s nodes 
+This program will negotiate a k3s cluster between 2 hosts on the same network 
