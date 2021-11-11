@@ -35,39 +35,39 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	for {
+		wg.Add(1)
+		fmt.Println("Launching Goroutine for udp server...")
 
-	wg.Add(1)
-	fmt.Println("Launching Goroutine for udp server...")
+		go func() {
+			udp.Receive(pc, myIps, c, &wg)
+		}()
 
-	go func() {
-		udp.Receive(pc, myIps, c, &wg)
-	}()
+		fmt.Println("Sending a packet")
+		udp.Send(pc, octet)
+		fmt.Println("Waiting for receiving to finish...")
+		select {
+		case otherIP := <-c:
+			fmt.Println("Received", otherIP)
+			myOctet, err := strconv.Atoi(octet)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-	fmt.Println("Sending a packet")
-	udp.Send(pc, octet)
-	fmt.Println("Waiting for receiving to finish...")
-	select {
-	case otherIP := <-c:
-		fmt.Println("Received", otherIP)
-		myOctet, err := strconv.Atoi(octet)
-		if err != nil {
-			log.Fatal(err)
+			otherOctet, err := strconv.Atoi(otherIP)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if myOctet > otherOctet {
+				os.Setenv("K3S_MASTER", "true")
+			} else {
+				os.Setenv("K3S_MASTER", "false")
+			}
 		}
+		wg.Wait()
 
-		otherOctet, err := strconv.Atoi(otherIP)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if myOctet > otherOctet {
-			os.Setenv("K3S_MASTER", "true")
-		} else {
-			os.Setenv("K3S_MASTER", "false")
-		}
+		fmt.Println("K3S_MASTER: ", os.Getenv("K3S_MASTER"))
 	}
-	wg.Wait()
-
-	fmt.Println("K3S_MASTER: ", os.Getenv("K3S_MASTER"))
-
 	defer pc.Close()
 }

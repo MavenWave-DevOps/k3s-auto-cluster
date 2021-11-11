@@ -57,7 +57,7 @@ func Send(pc net.PacketConn, payload string) {
 
 	fmt.Println(addr)
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 1; i++ {
 		_, err = pc.WriteTo([]byte(payload), addr)
 		if err != nil {
 			panic(err)
