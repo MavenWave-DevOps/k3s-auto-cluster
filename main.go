@@ -1,6 +1,7 @@
 package main
 
 import (
+	k3s_deploy "autok3s/k3s-deploy"
 	"autok3s/udp"
 	"fmt"
 	"log"
@@ -17,8 +18,6 @@ type packet struct{}
 func main() {
 
 	c := make(chan string)
-
-	fmt.Println("Starting main function")
 
 	fmt.Println("Looking up my IPs by interface...")
 	myIps, err := udp.GetMyIp()
@@ -61,8 +60,11 @@ func main() {
 
 			if myOctet > otherOctet {
 				os.Setenv("K3S_MASTER", "true")
+				k3s_deploy.DeployMaster()
+
 			} else {
 				os.Setenv("K3S_MASTER", "false")
+				k3s_deploy.DeployNode(otherIP)
 			}
 		}
 		wg.Wait()
