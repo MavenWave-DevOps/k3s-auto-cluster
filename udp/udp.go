@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -56,7 +57,7 @@ func Send(pc net.PacketConn, payload string) {
 
 	fmt.Println(addr)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		_, err = pc.WriteTo([]byte(payload), addr)
 		if err != nil {
 			panic(err)
@@ -65,7 +66,7 @@ func Send(pc net.PacketConn, payload string) {
 		time.Sleep(5 * time.Second)
 	}
 }
-func Receive(pc net.PacketConn, myIps []string, c chan string) {
+func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGroup) {
 	for {
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
@@ -85,6 +86,8 @@ func Receive(pc net.PacketConn, myIps []string, c chan string) {
 		if loop_on == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
 			c <- string(buf[:n])
+			wg.Done()
+			return
 		}
 		continue
 	}

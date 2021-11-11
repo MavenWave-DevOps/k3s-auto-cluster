@@ -38,15 +38,17 @@ func main() {
 	fmt.Println("Launching Goroutine for udp server...")
 
 	go func() {
-		defer wg.Done()
-		udp.Receive(pc, myIps, c)
+		udp.Receive(pc, myIps, c, &wg)
 	}()
 
 	fmt.Println("Sending a packet")
 	udp.Send(pc, octet)
 	fmt.Println("Waiting for receiving to finish...")
+	select {
+		case otherIP := <-c:
+			fmt.Println("Received", otherIP)
+	}
 	wg.Wait()
 
-	fmt.Println("This is the value in C channel: ", c)
 	defer pc.Close()
 }
