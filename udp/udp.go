@@ -10,6 +10,8 @@ import (
 
 var myifaces []string
 
+
+
 func GetFourthOctet(ips []string) (string, error) {
 	fmt.Println(ips)
 	fmt.Println(len(ips))
@@ -63,7 +65,7 @@ func Send(pc net.PacketConn, payload string) {
 		time.Sleep(5 * time.Second)
 	}
 }
-func Receive(pc net.PacketConn, myIps []string) string {
+func Receive(pc net.PacketConn, myIps []string, c chan string) {
 	for {
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
@@ -82,7 +84,7 @@ func Receive(pc net.PacketConn, myIps []string) string {
 		}
 		if loop_on == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
-			return string(buf[:n])
+			c <- string(buf[:n])
 		}
 		continue
 	}

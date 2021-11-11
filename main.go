@@ -13,6 +13,9 @@ var wg sync.WaitGroup
 type packet struct{}
 
 func main() {
+
+	c := make(chan string)
+
 	fmt.Println("Starting main function")
 
 	fmt.Println("Looking up my IPs by interface...")
@@ -34,15 +37,16 @@ func main() {
 	wg.Add(1)
 	fmt.Println("Launching Goroutine for udp server...")
 
-	go func() string {
+	go func() {
 		defer wg.Done()
-		r := udp.Receive(pc, myIps)
-		return r
+		udp.Receive(pc, myIps, c)
 	}()
 
 	fmt.Println("Sending a packet")
 	udp.Send(pc, octet)
 	fmt.Println("Waiting for receiving to finish...")
 	wg.Wait()
+
+	fmt.Println("This is the value in C channel: ", c)
 	defer pc.Close()
 }
