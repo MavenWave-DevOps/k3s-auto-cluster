@@ -66,6 +66,34 @@ func Send(pc net.PacketConn, payload string) {
 		time.Sleep(5 * time.Second)
 	}
 }
+
+func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.WaitGroup) {
+	for {
+		buf := make([]byte, 1024)
+		n, addr, err := pc.ReadFrom(buf)
+		if err != nil {
+			panic(err)
+		}
+
+		loop_on := false
+
+		for _, ip := range myIps {
+			if strings.Split(addr.String(), ":")[0] == strings.Split(ip, "/")[0] {
+				fmt.Printf("Lol, this packet is from me - payload: %s\n", buf[:n])
+				loop_on = true
+				break
+			}
+		}
+		if loop_on == false {
+			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
+			c2 <- string(buf[:n])
+			wg.Done()
+			return
+		}
+		continue
+	}
+}
+
 func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGroup) {
 	for {
 		buf := make([]byte, 1024)
