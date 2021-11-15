@@ -12,7 +12,6 @@ var intLocalFourthOctet int
 var intRemoteFourthOctet int
 var wg sync.WaitGroup
 
-
 func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig) {
 	for {
 		wg.Add(1)

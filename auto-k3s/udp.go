@@ -93,7 +93,7 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 }
 
 func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGroup) {
-	for i:=0; i <= 10; i++{
+	for i := 0; i <= 10; i++ {
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
