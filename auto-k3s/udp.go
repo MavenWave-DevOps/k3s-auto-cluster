@@ -1,4 +1,4 @@
-package udp
+package autok3s
 
 import (
 	"errors"
@@ -10,8 +10,6 @@ import (
 )
 
 var myifaces []string
-
-
 
 func GetFourthOctet(ips []string) (string, error) {
 	fmt.Println(ips)
@@ -95,7 +93,7 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 }
 
 func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGroup) {
-	for {
+	for i:=0; i <= 10; i++{
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
@@ -114,6 +112,11 @@ func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGrou
 		if loop_on == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
 			c <- string(buf[:n])
+			wg.Done()
+			return
+		}
+		if i == 10 {
+			fmt.Println("Looped 5 times with no packet, i must be a node")
 			wg.Done()
 			return
 		}

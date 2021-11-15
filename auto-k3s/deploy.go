@@ -1,4 +1,4 @@
-package k3s_deploy
+package autok3s
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,8 @@ const (
 	base_net = "192.168.80"
 	nodeTokenPath = "/var/lib/rancher/k3s/server/node-token"
 )
+
+var wg2 sync.WaitGroup
 
 func DeployMaster() (string, error) {
 
@@ -84,28 +87,32 @@ func DeployNode(token string, m string) {
 
 
 
-	script := []byte(fmt.Sprintf("#!/bin/bash\nset -e\nsudo k3s agent --server %s --token %s> errors\n exit 0", os.Getenv("K3S_URL"), os.Getenv("K3S_TOKEN")))
+	script := []byte(fmt.Sprintf("#!/bin/bash\nset -e\nsudo k3s agent --server %s --token %s>output.txt 2>&1\n exit 0", os.Getenv("K3S_URL"), os.Getenv("K3S_TOKEN")))
 	err = os.WriteFile("agent.sh", script, 0777)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-	fmt.Println("Set up agent command")
-	cmd := exec.Command("/usr/bin/bash", "agent.sh")
+	wg2.Add(1)
 
-
-
-
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	outya := fmt.Sprintf("%s\n", out.String())
-	fmt.Println(outya)
-	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ":" + stderr.String())
-		log.Fatal(err)
-	}
+	go func(){
+		fmt.Println("Starting the K3S agent in a separate process...")
+		cmd := exec.Command("/usr/bin/bash", "agent.sh")
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		wg2.Done()
+		err = cmd.Run()
+		outya := fmt.Sprintf("%s\n", out.String())
+		fmt.Println(outya)
+		if err != nil {
+			fmt.Println(fmt.Sprint(err) + ":" + stderr.String())
+			log.Fatal(err)
+		}
+	}()
+	wg2.Wait()
+	//Adding a sleep to give the agent a little time to fully start
+	time.Sleep(30*time.Second)
 	fmt.Println("done with agent setup")
 	//output, err = cmd2.Output()
 	return
