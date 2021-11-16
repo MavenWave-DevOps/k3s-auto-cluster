@@ -72,6 +72,9 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 		if err != nil {
 			panic(err)
 		}
+		if len(buf[:n]) < 25 {
+			continue
+		}
 
 		loop_on := false
 
@@ -92,8 +95,8 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 	}
 }
 
-func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGroup) {
-	for i := 0; i <= 10; i++ {
+func Receive(pc net.PacketConn, myIps []string, c chan string, c2 chan string, wg *sync.WaitGroup) {
+	for {
 		buf := make([]byte, 1024)
 		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
@@ -101,7 +104,7 @@ func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGrou
 		}
 
 		loop_on := false
-
+		fmt.Println("length of addr ", len(buf[:n]))
 		for _, ip := range myIps {
 			if strings.Split(addr.String(), ":")[0] == strings.Split(ip, "/")[0] {
 				fmt.Printf("Lol, this packet is from me - payload: %s\n", buf[:n])
@@ -109,14 +112,10 @@ func Receive(pc net.PacketConn, myIps []string, c chan string, wg *sync.WaitGrou
 				break
 			}
 		}
+
 		if loop_on == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
 			c <- string(buf[:n])
-			wg.Done()
-			return
-		}
-		if i == 10 {
-			fmt.Println("Looped 5 times with no packet, i must be a node")
 			wg.Done()
 			return
 		}

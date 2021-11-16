@@ -20,7 +20,7 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 		case false:
 			fmt.Println("Receiving an IP")
 			go func() {
-				Receive(pc, ipconfig.MyIps, c, &wg)
+				Receive(pc, ipconfig.MyIps, c, c2, &wg)
 			}()
 		case true:
 			fmt.Println("Receiving a token")
@@ -48,6 +48,7 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 
 				fmt.Println("Set K3s Master to TRUE")
 				if d.DeployMasterReady == true {
+					Send(pc, ipconfig.LocalFourthOctet)
 					nodeToken, _ := DeployMaster()
 					fmt.Println(nodeToken)
 					Send(pc, string(nodeToken[:]))
