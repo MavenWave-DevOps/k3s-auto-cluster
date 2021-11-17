@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const (
-	base_net      = "192.168.80"
-	nodeTokenPath = "/var/lib/rancher/k3s/server/node-token"
-)
-
 var wg2 sync.WaitGroup
 
 func commonDeploy(cmd *exec.Cmd) string {
