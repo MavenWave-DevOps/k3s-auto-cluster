@@ -36,7 +36,7 @@ func DeployMaster() (string, error) {
 	cmd := exec.Command("/usr/bin/bash", "install.sh")
 	commonDeploy(cmd)
 
-	fmt.Println("done with: ", script)
+	fmt.Println("Finished Install Script: ")
 	if os.Getenv("K3S_MASTER") == "true" {
 
 		time.Sleep(100 * time.Millisecond)
@@ -46,7 +46,7 @@ func DeployMaster() (string, error) {
 		cmd3 := exec.Command("sudo", "chmod", "777", "/etc/rancher/k3s/k3s.yaml")
 		oo := commonDeploy(cmd3)
 
-		fmt.Println("done with command 2")
+		fmt.Println("Retrieved node token...")
 		//output, err = cmd2.Output()
 		return fmt.Sprintf("%s\n%s", o, oo), nil
 	}
