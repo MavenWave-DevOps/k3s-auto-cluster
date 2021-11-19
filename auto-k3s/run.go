@@ -14,6 +14,24 @@ var NodeIPs []string
 
 var wg sync.WaitGroup
 
+//ex:
+//my ip: 21
+//nodeIPs: [22, 20]
+// CheckMaster loops through node ips and checks whether the nodes IP is the lowest out of all the nodes
+
+func CheckMaster(NodeIPs []string, ipconfig IpConfig) bool {
+	for _, StrRemoteIp := range NodeIPs {
+		intLocalFourthOctet, err := strconv.Atoi(ipconfig.LocalFourthOctet)
+		CheckErr(err)
+		intRemoteFourthOctet, err = strconv.Atoi(StrRemoteIp)
+		CheckErr(err)
+		if intLocalFourthOctet > intRemoteFourthOctet {
+			return false
+		}
+	}
+	return true
+}
+
 func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig) {
 	for {
 
@@ -54,15 +72,7 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			if len(NodeIPs) == nodeQuantity-1 {
 				fmt.Printf("Node IPs and node quantity match\n Node IPs are: ", NodeIPs)
 				// Make updates here to wait for all IPs to come in
-				for _, StrRemoteIp := range NodeIPs {
-					intLocalFourthOctet, err := strconv.Atoi(ipconfig.LocalFourthOctet)
-					CheckErr(err)
-					intRemoteFourthOctet, err = strconv.Atoi(StrRemoteIp)
-					CheckErr(err)
-					if intLocalFourthOctet < intRemoteFourthOctet {
-						master = true
-					}
-				}
+				master = CheckMaster(NodeIPs, ipconfig)
 
 				if master == true {
 					err := os.Setenv("K3S_MASTER", "true")
