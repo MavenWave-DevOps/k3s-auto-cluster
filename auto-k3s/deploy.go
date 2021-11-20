@@ -75,7 +75,7 @@ func DeployNode(token string, m string) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	script := []byte(fmt.Sprintf("#!/bin/bash\nset -e\nsudo k3s agent --server %s --token %s &\n exit 0", os.Getenv("K3S_URL"), os.Getenv("K3S_TOKEN")))
+	script := []byte(fmt.Sprintf("#!/bin/bash\nset -e\nsudo nohup k3s agent --server %s --token %s &\n exit 0", os.Getenv("K3S_URL"), os.Getenv("K3S_TOKEN")))
 	err = os.WriteFile("agent.sh", script, 0777)
 	CheckErr(err)
 
