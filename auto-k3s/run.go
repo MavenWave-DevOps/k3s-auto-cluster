@@ -60,10 +60,17 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			master := false
 
 			if len(NodeIPs) > 0 {
+				var Nodeappend = false
+
 				for _, StrRemoteIp := range NodeIPs {
-					if channelReceive != StrRemoteIp {
-						NodeIPs = append(NodeIPs, channelReceive)
+					if channelReceive == StrRemoteIp {
+						Nodeappend = false
+						break
 					}
+					Nodeappend = true
+				}
+				if Nodeappend == true {
+					NodeIPs = append(NodeIPs, channelReceive)
 				}
 			} else {
 				NodeIPs = append(NodeIPs, channelReceive)
