@@ -75,8 +75,10 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			} else {
 				NodeIPs = append(NodeIPs, channelReceive)
 			}
+			nodeQuantityInt, err := strconv.Atoi(nodeQuantity)
+			CheckErr(err)
 
-			if len(NodeIPs) == nodeQuantity-1 {
+			if len(NodeIPs) == nodeQuantityInt-1 {
 				fmt.Printf("Node IPs and node quantity match\n Node IPs are: ", NodeIPs)
 				// Make updates here to wait for all IPs to come in
 				master = CheckMaster(NodeIPs, ipconfig)
