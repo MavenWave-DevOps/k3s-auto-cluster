@@ -9,7 +9,7 @@ template_repo=k3s-deployment-templates
 export BASE_NET=$(sudo hostname -I)
 export NODE_QUANTITY=2
 
-sudo apt-get update && apt-get && sudo apt-get install google-cloud-sdk
+sudo apt-get update && sudo apt-get install google-cloud-sdk
 
 for item in ${data[@]}; do
   if grep -Fxq "cgroup_enable=cpuset" $file; then
@@ -36,7 +36,7 @@ kubectl create secret docker-registry gcr-json-key \
   --docker-server=gcr.io \
   --docker-username=_json_key \
   --docker-password="$(cat $key_path)" \
-  --docker-email=ya@gmail.com
+  --docker-email=antonio.prestifilippo@mavenwave.com
 for i in $(ls); do
   kubectl apply -f $i;
 done;
