@@ -29,8 +29,10 @@ kubectl get nodes
 
 gcloud auth activate-service-account $service_account --key-file=$key_path --project=$project_id
 gcloud source repos clone $template_repo --project=$project_id
+cd $template_repo
+git checkout main
 
-for i in $(ls $template_repo); do
+for i in $(ls); do
   kubectl apply -f $i;
 done;
 
