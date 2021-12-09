@@ -53,11 +53,11 @@ func DeployMaster() (string, error) {
 	return "done", nil
 }
 
-func DeployNode(token string, m string) {
+func DeployNode(token string, m string, baseNet string) {
 
 	fmt.Println("Starting node deployment...")
 
-	s := []string{base_net, m}
+	s := []string{baseNet, m}
 	masterIp := strings.Join(s, ".")
 	masterURL := fmt.Sprintf("https://%s:6443", masterIp)
 

@@ -11,7 +11,6 @@ import (
 var intLocalFourthOctet int
 var intRemoteFourthOctet int
 var NodeIPs []string
-
 var wg sync.WaitGroup
 
 //ex:
@@ -32,9 +31,8 @@ func CheckMaster(NodeIPs []string, ipconfig IpConfig) bool {
 	return true
 }
 
-func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig) {
+func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig, base_net string, nodeQuantity int) {
 	for {
-
 		wg.Add(1)
 
 		switch d.DeployNodeReady {
@@ -75,10 +73,8 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			} else {
 				NodeIPs = append(NodeIPs, channelReceive)
 			}
-			nodeQuantityInt, err := strconv.Atoi(nodeQuantity)
-			CheckErr(err)
 
-			if len(NodeIPs) == nodeQuantityInt-1 {
+			if len(NodeIPs) == nodeQuantity-1 {
 				fmt.Printf("Node IPs and node quantity match\n Node IPs are: ", NodeIPs)
 				// Make updates here to wait for all IPs to come in
 				master = CheckMaster(NodeIPs, ipconfig)
@@ -108,7 +104,7 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			fmt.Println(intRemoteFourthOctet)
 			stringRemoteFourthOctet := strconv.Itoa(intRemoteFourthOctet)
 			fmt.Printf("%s:%T", stringRemoteFourthOctet, stringRemoteFourthOctet)
-			DeployNode(channelReceive, stringRemoteFourthOctet)
+			DeployNode(channelReceive, stringRemoteFourthOctet, base_net)
 			d.DeployNodeReady = false
 			d.AlreadyDeployed = true
 		}
