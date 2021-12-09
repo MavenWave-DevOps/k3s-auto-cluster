@@ -32,6 +32,11 @@ gcloud source repos clone $template_repo --project=$project_id
 cd $template_repo
 git checkout main
 
+kubectl create secret docker-registry gcr-json-key \
+  --docker-server=gcr.io \
+  --docker-username=_json_key \
+  --docker-password="$(cat $key_path)" \
+  --docker-email=ya@gmail.com
 for i in $(ls); do
   kubectl apply -f $i;
 done;
