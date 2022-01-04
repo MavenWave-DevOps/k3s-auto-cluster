@@ -20,7 +20,7 @@ done;
 
 wget https://github.com/tony-mw/k3s-auto-cluster/releases/download/v1.0.0/autok3s
 chmod 777 autok3s
-sudo nohup ./autok3s -baseNet=$BASE_NET -nodeQuantity=$NODE_QUANTITY &>/dev/null &
+sudo nohup ./autok3s -baseNet=$BASE_NET -nodeQuantity=$NODE_QUANTITY &>/home/pi/autok3slogs &
 
 echo "Sleeping for 7 minutes.."
 sleep 420

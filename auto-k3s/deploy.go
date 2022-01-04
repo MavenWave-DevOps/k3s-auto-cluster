@@ -33,7 +33,7 @@ func DeployMaster() (string, error) {
 	err := os.WriteFile("install.sh", script, 0777)
 	CheckErr(err)
 
-	cmd := exec.Command("/usr/bin/bash", "install.sh")
+	cmd := exec.Command("/bin/bash", "install.sh")
 	commonDeploy(cmd)
 
 	fmt.Println("Finished Install Script: ")
@@ -83,7 +83,7 @@ func DeployNode(token string, m string, baseNet string) {
 
 	go func() {
 		fmt.Println("Starting the K3S agent in a separate process...")
-		cmd := exec.Command("/usr/bin/bash", "agent.sh")
+		cmd := exec.Command("/bin/bash", "agent.sh")
 		wg2.Done()
 		commonDeploy(cmd)
 	}()
