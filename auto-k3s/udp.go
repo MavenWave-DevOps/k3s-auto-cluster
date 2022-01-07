@@ -47,7 +47,7 @@ func GetMyIp() ([]string, error) {
 	return myifaces, nil
 }
 
-func Send(pc net.PacketConn, payload string) {
+func (p PiConfig) Send(payload string) {
 	addr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:8830")
 	if err != nil {
 		panic(err)
@@ -56,7 +56,7 @@ func Send(pc net.PacketConn, payload string) {
 	fmt.Println(addr)
 
 	for i := 0; i < 1; i++ {
-		_, err = pc.WriteTo([]byte(payload), addr)
+		_, err = p.Pc.WriteTo([]byte(payload), addr)
 		if err != nil {
 			panic(err)
 		}
@@ -65,10 +65,10 @@ func Send(pc net.PacketConn, payload string) {
 	}
 }
 
-func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.WaitGroup) {
+func (p PiConfig) ReceiveToken(c2 chan string, wg *sync.WaitGroup) {
 	for {
 		buf := make([]byte, 1024)
-		n, addr, err := pc.ReadFrom(buf)
+		n, addr, err := p.Pc.ReadFrom(buf)
 		if err != nil {
 			panic(err)
 		}
@@ -76,16 +76,15 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 			continue
 		}
 
-		loop_on := false
-
-		for _, ip := range myIps {
+		loopOn := false
+		for _, ip := range p.PiIpConfig.MyIps {
 			if strings.Split(addr.String(), ":")[0] == strings.Split(ip, "/")[0] {
 				fmt.Printf("Lol, this packet is from me - payload: %s\n", buf[:n])
-				loop_on = true
+				loopOn = true
 				break
 			}
 		}
-		if loop_on == false {
+		if loopOn == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
 			c2 <- string(buf[:n])
 			wg.Done()
@@ -95,25 +94,25 @@ func ReceiveToken(pc net.PacketConn, myIps []string, c2 chan string, wg *sync.Wa
 	}
 }
 
-func Receive(pc net.PacketConn, myIps []string, c chan string, c2 chan string, wg *sync.WaitGroup) {
+func (p PiConfig) Receive(c chan string, wg *sync.WaitGroup) {
 	for {
 		buf := make([]byte, 1024)
-		n, addr, err := pc.ReadFrom(buf)
+		n, addr, err := p.Pc.ReadFrom(buf)
 		if err != nil {
 			panic(err)
 		}
 
-		loop_on := false
+		loopOn := false
 		fmt.Println("length of addr ", len(buf[:n]))
-		for _, ip := range myIps {
+		for _, ip := range p.PiIpConfig.MyIps {
 			if strings.Split(addr.String(), ":")[0] == strings.Split(ip, "/")[0] {
 				fmt.Printf("Lol, this packet is from me - payload: %s\n", buf[:n])
-				loop_on = true
+				loopOn = true
 				break
 			}
 		}
 
-		if loop_on == false {
+		if loopOn == false {
 			fmt.Printf("%s sent this: %s\n", addr, buf[:n])
 			c <- string(buf[:n])
 			wg.Done()
