@@ -18,9 +18,9 @@ var wg sync.WaitGroup
 //nodeIPs: [22, 20]
 // CheckMaster loops through node ips and checks whether the nodes IP is the lowest out of all the nodes
 
-func CheckMaster(NodeIPs []string, ipconfig IpConfig) bool {
+func (p PiConfig) CheckMaster(NodeIPs []string) bool {
 	for _, StrRemoteIp := range NodeIPs {
-		intLocalFourthOctet, err := strconv.Atoi(ipconfig.LocalFourthOctet)
+		intLocalFourthOctet, err := strconv.Atoi(p.PiIpConfig.LocalFourthOctet)
 		CheckErr(err)
 		intRemoteFourthOctet, err = strconv.Atoi(StrRemoteIp)
 		CheckErr(err)
@@ -31,25 +31,34 @@ func CheckMaster(NodeIPs []string, ipconfig IpConfig) bool {
 	return true
 }
 
-func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig, base_net string, nodeQuantity int) {
+func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, ipconfig IpConfig, envConfig EnvConfig) {
+
+	//Set up piconfig
+	PiConfig := PiConfig{
+		PiEnvConfig:      envConfig,
+		PiIpConfig:       ipconfig,
+		DeploymentMatrix: d,
+		Pc:               pc,
+	}
+
 	for {
 		wg.Add(1)
 
-		switch d.DeployNodeReady {
+		switch PiConfig.DeploymentMatrix.DeployNodeReady {
 		case false:
 			fmt.Println("UDP Server - Receiving an IP")
 			go func() {
-				Receive(pc, ipconfig.MyIps, c, c2, &wg)
+				PiConfig.Receive(c, &wg)
 			}()
 		case true:
 			fmt.Println("UDP Server - Receiving a token")
 			go func() {
-				ReceiveToken(pc, ipconfig.MyIps, c2, &wg)
+				PiConfig.ReceiveToken(c2, &wg)
 			}()
 		}
 
 		fmt.Println("Sending a packet...")
-		Send(pc, ipconfig.LocalFourthOctet)
+		PiConfig.Send(PiConfig.PiIpConfig.LocalFourthOctet)
 
 		fmt.Println("Waiting for receiving to finish...")
 		select {
@@ -74,28 +83,28 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 				NodeIPs = append(NodeIPs, channelReceive)
 			}
 
-			if len(NodeIPs) == nodeQuantity-1 {
+			if len(NodeIPs) == PiConfig.PiEnvConfig.NodeQuantity-1 {
 				fmt.Printf("Node IPs and node quantity match\n Node IPs are: ", NodeIPs)
 				// Make updates here to wait for all IPs to come in
-				master = CheckMaster(NodeIPs, ipconfig)
+				master = PiConfig.CheckMaster(NodeIPs)
 
 				if master == true {
 					err := os.Setenv("K3S_MASTER", "true")
 					CheckErr(err)
 
 					fmt.Println("Set K3s Master to TRUE")
-					if d.DeployMasterReady == true {
-						Send(pc, ipconfig.LocalFourthOctet)
-						nodeToken, _ := DeployMaster()
+					if PiConfig.DeploymentMatrix.DeployMasterReady == true {
+						PiConfig.Send(PiConfig.PiIpConfig.LocalFourthOctet)
+						nodeToken, _ := PiConfig.DeployMaster()
 						fmt.Println(nodeToken)
-						Send(pc, string(nodeToken[:]))
-						d.DeployMasterReady = false
+						PiConfig.Send(string(nodeToken[:]))
+						PiConfig.DeploymentMatrix.DeployMasterReady = false
 					}
 				} else {
 					os.Setenv("K3S_MASTER", "false")
 					fmt.Println("Set K3s Master to FALSE")
-					if d.AlreadyDeployed == false {
-						d.DeployNodeReady = true
+					if PiConfig.DeploymentMatrix.DeploymentComplete == false {
+						PiConfig.DeploymentMatrix.DeployNodeReady = true
 					}
 				}
 			}
@@ -104,9 +113,9 @@ func Run(d DeploymentMatrix, pc net.PacketConn, c chan string, c2 chan string, i
 			fmt.Println(intRemoteFourthOctet)
 			stringRemoteFourthOctet := strconv.Itoa(intRemoteFourthOctet)
 			fmt.Printf("%s:%T", stringRemoteFourthOctet, stringRemoteFourthOctet)
-			DeployNode(channelReceive, stringRemoteFourthOctet, base_net)
-			d.DeployNodeReady = false
-			d.AlreadyDeployed = true
+			PiConfig.DeployNode(channelReceive, stringRemoteFourthOctet)
+			PiConfig.DeploymentMatrix.DeployNodeReady = false
+			PiConfig.DeploymentMatrix.DeploymentComplete = true
 		}
 
 		wg.Wait()

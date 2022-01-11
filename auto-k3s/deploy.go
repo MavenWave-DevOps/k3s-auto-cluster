@@ -27,7 +27,7 @@ func commonDeploy(cmd *exec.Cmd) string {
 	return fmt.Sprintf("%s\n", stdout.String())
 }
 
-func DeployMaster() (string, error) {
+func (p PiConfig) DeployMaster() (string, error) {
 
 	script := []byte("#!/bin/bash\nset -e\ncurl -s -f -L https://get.k3s.io | sh - 2> errors\n exit 0")
 	err := os.WriteFile("install.sh", script, 0777)
@@ -53,11 +53,11 @@ func DeployMaster() (string, error) {
 	return "done", nil
 }
 
-func DeployNode(token string, m string, baseNet string) {
+func (p PiConfig) DeployNode(token string, m string) {
 
 	fmt.Println("Starting node deployment...")
 
-	s := []string{baseNet, m}
+	s := []string{p.PiEnvConfig.BaseNet, m}
 	masterIp := strings.Join(s, ".")
 	masterURL := fmt.Sprintf("https://%s:6443", masterIp)
 
@@ -70,7 +70,7 @@ func DeployNode(token string, m string, baseNet string) {
 	CheckErr(err)
 	fmt.Println("Set token")
 
-	_, err = DeployMaster()
+	_, err = p.DeployMaster()
 	CheckErr(err)
 
 	time.Sleep(100 * time.Millisecond)
